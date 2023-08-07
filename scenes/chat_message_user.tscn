@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://d3e6ewenmojpd"]
+
+[ext_resource type="Script" path="res://scenes/chat_message_user.gd" id="1_7qrjd"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q0njm"]
+content_margin_left = 15.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0, 0.54902, 0.415686, 1)
+border_width_left = 10
+border_color = Color(0, 0, 0, 0)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="ChatMessageUser" type="RichTextLabel"]
+offset_right = 233.0
+offset_bottom = 54.0
+theme_override_styles/normal = SubResource("StyleBoxFlat_q0njm")
+fit_content = true
+scroll_active = false
+script = ExtResource("1_7qrjd")

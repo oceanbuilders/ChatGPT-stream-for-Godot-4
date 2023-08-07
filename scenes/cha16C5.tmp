@@ -1,0 +1,115 @@
+[gd_scene load_steps=9 format=3 uid="uid://bstnmruoashay"]
+
+[ext_resource type="Script" path="res://scenes/chat.gd" id="1_yspck"]
+[ext_resource type="Script" path="res://scenes/user_prompt.gd" id="2_lse07"]
+[ext_resource type="Script" path="res://scenes/send_button.gd" id="3_mbnij"]
+[ext_resource type="Script" path="res://scenes/conversation_container.gd" id="4_5r13d"]
+[ext_resource type="Script" path="res://addons/HTTPSSEClient/HTTPSSEClient_modified.gd" id="5_r7tt6"]
+[ext_resource type="PackedScene" uid="uid://c43fwhvdko2se" path="res://scenes/godot-elevenlabs-tts/ElevenLabsTTS.tscn" id="6_y77mm"]
+[ext_resource type="Script" path="res://scenes/godot-elevenlabs-tts/ElevenLabsTTS_modified.gd" id="7_xhtff"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ny5ai"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0, 0, 0, 0.188235)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.137255, 0.137255, 0.137255, 1)
+
+[node name="chat" type="Node2D"]
+script = ExtResource("1_yspck")
+temperature = null
+model = null
+stream = null
+word_by_word_delay = null
+chatgpt_history_length = null
+
+[node name="ChatWindow" type="Control" parent="."]
+clip_contents = true
+layout_mode = 3
+anchors_preset = 0
+offset_top = 2.0
+offset_right = 645.0
+offset_bottom = 649.0
+
+[node name="UserPrompt" type="TextEdit" parent="ChatWindow"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 545.0
+offset_right = -94.0
+offset_bottom = -21.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_lse07")
+
+[node name="SendButton" type="Button" parent="ChatWindow"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 563.0
+offset_top = 545.0
+offset_right = -20.0
+offset_bottom = -21.0
+mouse_default_cursor_shape = 2
+text = "➤"
+script = ExtResource("3_mbnij")
+
+[node name="ConversationContainer" type="ScrollContainer" parent="ChatWindow"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 22.0
+offset_top = 53.0
+offset_right = -17.0
+offset_bottom = -112.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_ny5ai")
+script = ExtResource("4_5r13d")
+
+[node name="Conversation" type="VBoxContainer" parent="ChatWindow/ConversationContainer"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="VoiceAISystemSelector" type="OptionButton" parent="ChatWindow"]
+layout_mode = 0
+offset_left = 21.0
+offset_top = 5.0
+offset_right = 288.0
+offset_bottom = 42.0
+item_count = 3
+selected = 0
+popup/item_0/text = "No AI speech"
+popup/item_0/id = 0
+popup/item_1/text = "OS TTS"
+popup/item_1/id = 1
+popup/item_2/text = "ElevenLabs"
+popup/item_2/id = 2
+
+[node name="VoiceSelector" type="OptionButton" parent="ChatWindow"]
+layout_mode = 0
+offset_left = 301.0
+offset_top = 5.0
+offset_right = 627.0
+offset_bottom = 42.0
+
+[node name="HTTPSSEClient" type="Node" parent="."]
+script = ExtResource("5_r7tt6")
+
+[node name="ElevenLabsTTS" parent="." instance=ExtResource("6_y77mm")]
+script = ExtResource("7_xhtff")
+voice_id = null
+use_stream_mode = null
+
+[connection signal="to_chat" from="ChatWindow/UserPrompt" to="." method="_on_user_prompt_to_chat"]
+[connection signal="to_chat" from="ChatWindow/SendButton" to="." method="_on_user_prompt_to_chat"]
+[connection signal="item_selected" from="ChatWindow/VoiceAISystemSelector" to="." method="_on_voice_ai_selector_item_selected"]
