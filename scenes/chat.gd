@@ -1,14 +1,19 @@
 extends Node2D
 
-@export var api_key = "your-open-ai-api-key"
+@export var api_key = "your-openai-apì-key"
 # var max_tokens = 1024
 @export var temperature = 0.5
 @export var model = "gpt-3.5-turbo"
 @export var stream : bool = true
 
+# The HTTPSSE client doesn't support paralallel requests, so we need to keep
+# track of when it is busy.
+signal stream_busy(is_busy:bool)
+
 var stream_reply_buffer: String
 var stream_reply_final: String
 var stream_used_status_ai_message = false
+var stream_ongoing = false
 
 var message_ai = preload("res://scenes/chat_message_ai.tscn")
 var message_user = preload("res://scenes/chat_message_user.tscn")
@@ -51,7 +56,7 @@ signal message_processed(message)
 @onready var voice_selector = $ChatWindow/VoiceSelector
 
 func _ready():
-	self.message_processed.connect(_on_message_processed)
+	message_processed.connect(_on_message_processed)
 	# If no voices are fetched from the OS we can't offer OS TTS and we select
 	# "No AI speech" by default
 	if voices_list.size() == 0:
@@ -93,6 +98,8 @@ func _on_new_sse_event(partial_reply: Array, ai_status_message: ChatMessageAI):
 			$HTTPSSEClient.close_connection()
 			# Whatever is reamining in the buffer, if any, must be sent to the 
 			# RichTextLabel and voice ai service
+			stream_ongoing = false
+			
 			if stream_reply_buffer.length() > 0:
 				stream_reply_final += stream_reply_buffer
 				_inject_message_from_stream(ai_status_message, stream_reply_buffer) 
@@ -109,6 +116,7 @@ func _on_new_sse_event(partial_reply: Array, ai_status_message: ChatMessageAI):
 			pass
 		elif string == "[ERROR]":
 			$HTTPSSEClient.close_connection()
+			stream_ongoing = false
 			# Whatever is reamining in the buffer, if any, must be sent to the 
 			# RichTextLabel and voice ai service
 			if stream_reply_buffer.length() > 0:
@@ -176,6 +184,8 @@ func _call_gpt(prompt: String, ai_status_message: RichTextLabel) -> void:
 	
 	if stream:
 		$HTTPSSEClient.connect_to_host(host, path, headers, body, ai_status_message, 443)
+		stream_busy.emit(true)
+		stream_ongoing = true
 	else:
 		var http_request = HTTPRequest.new()
 		add_child(http_request)
@@ -212,8 +222,6 @@ func _on_user_prompt_to_chat(text) -> void:
 	var ai_message = message_ai.instantiate()
 	_insert_message(user_message,text,types.USER)
 	
-	# TODO: if using stream = true we need to disable the prompt until the HTTPSSEClient is free
-	# for a new request
 	_call_gpt(text, ai_message)
 	
 	await get_tree().create_timer(0.5).timeout
@@ -315,6 +323,10 @@ func process_message(message):
 	# We clear the message
 	message.clear()
 	
+	# Checks if this is the last message of the stream
+	if stream == true and stream_ongoing == false and message_queue.size() == 0:
+		stream_busy.emit(false)
+	
 	# We only need to add a child for those messages we are not reusing
 	# for example for those messages that replace "thinking..." we reause the child
 	if not message.is_inside_tree():
@@ -330,8 +342,6 @@ func process_message(message):
 			if index == words.size() - 1:
 				currently_processing = false
 				emit_signal("message_processed", message)
-				
-
 	else:
 		#if bbccode is enabled, to simplify things for now (bbc tags complicate things), we just inject the whole text at once
 		message.append_text(text)

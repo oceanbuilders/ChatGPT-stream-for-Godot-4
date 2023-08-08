@@ -21,17 +21,20 @@ For the best results, the delay for the word by word speed, should be set to a v
 
 1. This project was created with Godot 4.1.1, for maximum compatibility please using that version.
 
-2. Insert your OpenAI API key at the top of the chat.gd script
+2. Project => Project Settings => Audio => General => Text to Speech has to be enabled (it should be enabled already for this project)
 
-3. Only if you want TTS by ElevenLabs, insert your ElevenLabs API key in the script res://scenes/godot-elevenlabs-tts/ElevenLabsTTS_modified.gd.
+3. Insert your OpenAI API key at the top of the chat.gd script
 
-4. In the chat.gd script, in the `_ready` function, there is a "system_message" dictionary that you can edit so you give the LLM model your own instructions on how it should behave.
+4. Only if you want TTS by ElevenLabs, insert your ElevenLabs API key in the script res://scenes/godot-elevenlabs-tts/ElevenLabsTTS_modified.gd.
 
-5. The render is "Compatibility" so you should be able to export this for any platform, including the web.
+5. In the chat.gd script, in the `_ready` function, there is a "system_message" dictionary that you can edit so you give the LLM model your own instructions on how it should behave.
+
+6. The render is "Compatibility" so you should be able to export this for any platform, including the web.
 
 # Limitations
 
 - I could not get the ElevenLabs text-to-speech to work using the `use_stream_mode=true` which should improve latency for voice output. It is set to false by default.
+- Currently the HTTP SSE client can't do parallel requests. For this reason, when a message is sent by the user, the prompt area and the send buttons won't be able to send new messages until the latest pending RichTextLabel for the AI reply is created.
 
 # License
 
